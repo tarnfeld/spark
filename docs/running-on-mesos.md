@@ -170,6 +170,14 @@ using `conf.set("spark.cores.max", "10")` (for example).
 # Known issues
 - When using the "fine-grained" mode, make sure that your executors always leave 32 MB free on the slaves. Otherwise it can happen that your Spark job does not proceed anymore. Currently, Apache Mesos only offers resources if there are at least 32 MB memory allocatable. But as Spark allocates memory only for the executor and cpu only for tasks, it can happen on high slave memory usage that no new tasks will be started anymore. More details can be found in [MESOS-1688](https://issues.apache.org/jira/browse/MESOS-1688). Alternatively use the "coarse-gained" mode, which is not affected by this issue.
 
+# Mesos Docker Support
+
+Spark can make use of a Mesos Docker containerizer by setting the property `spark.mesos.executor.docker.image`
+in your [SparkConf](configuration.html#spark-properties)
+
+The Docker Image used must have an appropriate version of Spark already part of the image, or you can
+have Mesos download Spark via the usual methods.
+
 # Running Alongside Hadoop
 
 You can run Spark and Mesos alongside your existing Hadoop cluster by just launching them as a
@@ -214,7 +222,7 @@ See the [configuration page](configuration.html) for information on Spark config
   </td>
 </tr>
 <tr>
-  <td><code>spark.executor.docker.image</code></td>
+  <td><code>spark.mesos.executor.docker.image</code></td>
   <td>(none)</td>
   <td>
     Set the docker image in which the Spark executors will run when using Mesos. The selected
@@ -225,11 +233,11 @@ See the [configuration page](configuration.html) for information on Spark config
   </td>
 </tr>
 <tr>
-  <td><code>spark.executor.docker.volumes</code></td>
+  <td><code>spark.mesos.executor.docker.volumes</code></td>
   <td>(none)</td>
   <td>
     Set the list of volumes which will be mounted into the Docker image, which was set using
-    <code>spark.executor.docker.image</code>. The format of this property is a comma-separated list of
+    <code>spark.mesos.executor.docker.image</code>. The format of this property is a comma-separated list of
     mappings following the form passed to <tt>docker run -v</tt>. That is they take the form:
 
     <pre>[host_path:]container_path[:ro|:rw]</pre>
@@ -238,11 +246,11 @@ See the [configuration page](configuration.html) for information on Spark config
   </td>
 </tr>
 <tr>
-  <td><code>spark.executor.docker.portmaps</code></td>
+  <td><code>spark.mesos.executor.docker.portmaps</code></td>
   <td>(none)</td>
   <td>
     Set the list of incoming ports exposed by the Docker image, which was set using
-    <code>spark.executor.docker.image</code>. The format of this property is a comma-separated list of
+    <code>spark.mesos.executor.docker.image</code>. The format of this property is a comma-separated list of
     mappings which take the form:
 
     <pre>host_port:container_port[:tcp|:udp]</pre>

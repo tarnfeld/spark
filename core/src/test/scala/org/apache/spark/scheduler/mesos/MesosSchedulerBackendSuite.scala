@@ -81,6 +81,15 @@ class MesosSchedulerBackendSuite extends FunSuite with LocalSparkContext with Mo
     EasyMock.expect(conf.getOption("spark.executor.docker.portmaps")).andReturn(Option("80:8080,53:53:tcp")).anyTimes()
     EasyMock.replay(conf)
 
+    val conf = new SparkConf()
+      .set("spark.mesos.executor.docker.image", "spark/mock")
+      .set("spark.mesos.executor.docker.volumes", "/a,/b:/b,/c:/c:rw,/d:ro,/e:/e:ro")
+      .set("spark.mesos.executor.docker.portmaps", "80:8080,53:53:tcp")
+     
+    val listenerBus = EasyMock.createMock(classOf[LiveListenerBus])
+    listenerBus.post(SparkListenerExecutorAdded(EasyMock.anyLong, "s1", new ExecutorInfo("host1", 2)))
+    EasyMock.replay(listenerBus)
+                         
     val sc = EasyMock.createMock(classOf[SparkContext])
     EasyMock.expect(sc.executorMemory).andReturn(100).anyTimes()
     EasyMock.expect(sc.getSparkHome()).andReturn(Option("/path")).anyTimes()
