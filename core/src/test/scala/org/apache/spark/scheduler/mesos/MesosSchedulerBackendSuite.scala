@@ -73,38 +73,24 @@ class MesosSchedulerBackendSuite extends FunSuite with LocalSparkContext with Mo
   }
 
   test("spark docker properties correctly populate the DockerInfo message") {
-    val taskScheduler = EasyMock.createMock(classOf[TaskSchedulerImpl])
-
-    val conf = EasyMock.createMock(classOf[SparkConf])
-    EasyMock.expect(conf.getOption("spark.executor.docker.image")).andReturn(Option("spark/mock")).anyTimes()
-    EasyMock.expect(conf.getOption("spark.executor.docker.volumes")).andReturn(Option("/a,/b:/b,/c:/c:rw,/d:/d:ro")).anyTimes()
-    EasyMock.expect(conf.getOption("spark.executor.docker.portmaps")).andReturn(Option("80:8080,53:53:tcp")).anyTimes()
-    EasyMock.replay(conf)
+    val taskScheduler = mock[TaskSchedulerImpl]
 
     val conf = new SparkConf()
       .set("spark.mesos.executor.docker.image", "spark/mock")
       .set("spark.mesos.executor.docker.volumes", "/a,/b:/b,/c:/c:rw,/d:ro,/e:/e:ro")
       .set("spark.mesos.executor.docker.portmaps", "80:8080,53:53:tcp")
      
-    val listenerBus = EasyMock.createMock(classOf[LiveListenerBus])
-    listenerBus.post(SparkListenerExecutorAdded(EasyMock.anyLong, "s1", new ExecutorInfo("host1", 2)))
-    EasyMock.replay(listenerBus)
+    val listenerBus = mock[LiveListenerBus]
+    listenerBus.post(SparkListenerExecutorAdded(anyLong, "s1", new ExecutorInfo("host1", 2, Map.empty)))
                          
-    val sc = EasyMock.createMock(classOf[SparkContext])
-    EasyMock.expect(sc.executorMemory).andReturn(100).anyTimes()
-    EasyMock.expect(sc.getSparkHome()).andReturn(Option("/path")).anyTimes()
-    EasyMock.expect(sc.executorEnvs).andReturn(new mutable.HashMap).anyTimes()
-    EasyMock.expect(sc.conf).andReturn(conf).anyTimes()
-    EasyMock.expect(sc.listenerBus).andReturn(listenerBus)
-    EasyMock.replay(sc)
+    val sc = mock[SparkContext]
+    when(sc.executorMemory).thenReturn(100)
+    when(sc.getSparkHome()).thenReturn(Option("/spark-home"))
+    when(sc.executorEnvs).thenReturn(new mutable.HashMap[String, String])
+    when(sc.conf).thenReturn(conf)
+    when(sc.listenerBus).thenReturn(listenerBus)
 
     val backend = new MesosSchedulerBackend(taskScheduler, sc, "master")
-
-    val capture = new Capture[util.Collection[ExecutorInfo]]
-    EasyMock.expect(
-      backend.createExecutorInfo("mockExecutor")
-    ).andReturn(Status.valueOf(1)).once
-    EasyMock.replay(taskScheduler)
 
     EasyMock.verify(taskScheduler)
     assert(capture.getValue.size() == 1)
